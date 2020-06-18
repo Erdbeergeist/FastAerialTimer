@@ -5,8 +5,6 @@ BAKKESMOD_PLUGIN(FastAerialTimer, "FastAerialTimer", "0.1", PLUGINTYPE_FREEPLAY)
 
 void FastAerialTimer::onLoad()
 {
-	if (!gameWrapper->IsInFreeplay()) return;
-	
 	cvarManager->registerCvar("reset_all_time_best", "0", "Reset All Time Best");
 	cvarManager->registerNotifier("reset_all_time_best", std::bind(&FastAerialTimer::resetAllTimeBest, this), "reset all time best", PERMISSION_FREEPLAY);
 
@@ -16,7 +14,7 @@ void FastAerialTimer::onLoad()
 		AllTimeBestFile.close();
 	}
 
-	gameWrapper->LogToChatbox("Fast Aerial Timer Loaded");
+	if (gameWrapper->IsInFreeplay()) gameWrapper->LogToChatbox("Fast Aerial Timer Loaded");
 	
 	gameWrapper->HookEvent("Function TAGame.Car_TA.OnJumpPressed", std::bind(&FastAerialTimer::onJump, this));
 	gameWrapper->HookEvent("Function TAGame.Car_TA.OnRigidBodyCollision", std::bind(&FastAerialTimer::onCollision, this));
@@ -30,6 +28,7 @@ void FastAerialTimer::onUnload()
 
 void FastAerialTimer::onJump()
 {	
+	if (!gameWrapper->IsInFreeplay()) return;
 	CarWrapper car = gameWrapper->GetLocalCar();
 	if (car.GetLocation().Z < 17.1) {
 
@@ -42,6 +41,7 @@ void FastAerialTimer::onJump()
 
 void FastAerialTimer::onCollision()
 {
+	if (!gameWrapper->IsInFreeplay()) return;
 	CarWrapper car = gameWrapper->GetLocalCar();
 
 	if (car.GetLocation().Z > 1971 & this->timing_started) {
@@ -52,8 +52,8 @@ void FastAerialTimer::onCollision()
 		
 		if (duration < this->all_time_best | this->all_time_best < 0) this->saveBestTime(duration);
 
-		if (this->all_time_best > -1) gameWrapper->LogToChatbox("Time to ceiling: " + to_string_with_precision(duration, 3) + " s. Best time: " + to_string_with_precision(this->best_session, 3) + " s. All Time Best: " + to_string_with_precision(this->all_time_best, 3) + " s");
-		else gameWrapper->LogToChatbox("Time to ceiling: " + std::to_string(duration) + " ms. Best time: " + std::to_string(this->best_session) + " ms.");
+		if (this->all_time_best > -1) gameWrapper->LogToChatbox("Time to ceiling: " + to_string_with_precision(duration, 3) + " s. Best time (Session): " + to_string_with_precision(this->best_session, 3) + " s. All Time Best: " + to_string_with_precision(this->all_time_best, 3) + " s");
+		else gameWrapper->LogToChatbox("Time to ceiling: " + std::to_string(duration) + " ms. Best time (Session): " + std::to_string(this->best_session) + " ms.");
 
 		this->timing_started = false;
 		
