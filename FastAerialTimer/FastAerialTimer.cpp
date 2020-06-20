@@ -1,12 +1,15 @@
 #include "FastAerialTimer.h"
 
-BAKKESMOD_PLUGIN(FastAerialTimer, "FastAerialTimer", "0.1", PLUGINTYPE_FREEPLAY)
+BAKKESMOD_PLUGIN(FastAerialTimer, "FastAerialTimer", "0.12", PLUGINTYPE_FREEPLAY)
 
 
 void FastAerialTimer::onLoad()
 {
 	cvarManager->registerCvar("reset_all_time_best", "0", "Reset All Time Best");
 	cvarManager->registerNotifier("reset_all_time_best", std::bind(&FastAerialTimer::resetAllTimeBest, this), "reset all time best", PERMISSION_ALL);
+
+	cvarManager->registerCvar("toggle_on_off", "0", "Toggle Timer On/Off");
+	cvarManager->registerNotifier("toggle_on_off", std::bind(&FastAerialTimer::toggleOnOff, this), "Toggle Timer On / Off", PERMISSION_ALL);
 
 	this->AllTimeBestFile.open(this->savefile_path);
 	if (this->AllTimeBestFile.good()) {
@@ -15,9 +18,6 @@ void FastAerialTimer::onLoad()
 	}
 
 	if (gameWrapper->IsInFreeplay()) gameWrapper->LogToChatbox("Fast Aerial Timer Loaded");
-	
-	gameWrapper->HookEvent("Function TAGame.Car_TA.OnJumpPressed", std::bind(&FastAerialTimer::onJump, this));
-	gameWrapper->HookEvent("Function TAGame.Car_TA.OnRigidBodyCollision", std::bind(&FastAerialTimer::onCollision, this));
 }
 
 void FastAerialTimer::onUnload()
@@ -82,5 +82,22 @@ void FastAerialTimer::resetAllTimeBest()
 		this->AllTimeBestFile.close();
 	}
 	this->all_time_best = -1;
+
+}
+
+void FastAerialTimer::toggleOnOff()
+{
+	if (!this->timer_state) {
+		gameWrapper->HookEvent("Function TAGame.Car_TA.OnJumpPressed", std::bind(&FastAerialTimer::onJump, this));
+		gameWrapper->HookEvent("Function TAGame.Car_TA.OnRigidBodyCollision", std::bind(&FastAerialTimer::onCollision, this));
+		gameWrapper->LogToChatbox("Timer On");
+		this->timer_state = true;
+	}
+	else {
+		gameWrapper->UnhookEvent("Function TAGame.Car_TA.OnJumpPressed");
+		gameWrapper->UnhookEvent("Function TAGame.Car_TA.OnRigidBodyCollision");
+		gameWrapper->LogToChatbox("Timer Off");
+		this->timer_state = false;
+	}
 
 }

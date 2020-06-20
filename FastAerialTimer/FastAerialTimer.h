@@ -16,6 +16,7 @@ public:
 
 	float t0;
 	bool timing_started = false;
+	bool timer_state = false;
 	float best_session = -1;
 	float all_time_best = -1;
 	std::string savefile_path = "bakkesmod/data/fastaerialtimer.data";
@@ -26,5 +27,6 @@ private:
 	void onCollision();
 	void saveBestTime(float time);
 	void resetAllTimeBest();
+	void toggleOnOff();
 };
 
